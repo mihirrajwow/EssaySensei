@@ -20,7 +20,7 @@ export default function Home() {
   }
 
   return (
-    <main className=\"container\">
+    <main className="container">
       <EssayInput onSubmit={handleSubmit} isLoading={loading} />
     </main>
   )
