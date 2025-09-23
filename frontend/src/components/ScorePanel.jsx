@@ -2,11 +2,13 @@ import React from 'react'
 
 function ScoreItem({ label, value }) {
   const v = Number.isFinite(value) ? Math.round(value) : 0
+  const pct = Math.max(0, Math.min(100, v))
   return (
     <div className="score-item">
-      <div className="score-bubble-wrap">
-        <div className="score-bubble-shadow" />
-        <div className="score-bubble">{v}</div>
+      <div className="score-bubble-wrap" style={{ ['--pct']: `${pct}%` }}>
+        <div className="score-ring">
+          <div className="score-center">{v}</div>
+        </div>
       </div>
       <div className="score-label">{label}</div>
     </div>
