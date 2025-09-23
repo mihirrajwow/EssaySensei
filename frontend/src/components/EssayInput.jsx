@@ -14,7 +14,7 @@ export default function EssayInput({ onSubmit, isLoading }) {
   const canSubmit = text.trim().length >= 50
 
   return (
-    <div className="card">
+    <div className="card input-card">
       <textarea
         className="textarea input-area"
         placeholder="Enter your text here"
