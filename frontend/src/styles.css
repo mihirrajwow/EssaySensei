@@ -26,8 +26,8 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubunt
 .score-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; align-items:center; margin: 8px 0 18px; }
 .score-item { display:flex; align-items:center; gap: 12px; }
 .score-bubble-wrap { position: relative; width: 56px; height: 56px; }
-.score-bubble-shadow { position:absolute; bottom:-2px; left:-4px; width: 44px; height: 44px; background:#e9e9ec; border-radius:50%; }
-.score-bubble { position:absolute; top:0; left:0; width:56px; height:56px; border-radius:50%; background:#fff; border:8px solid #0b5fff; display:flex; align-items:center; justify-content:center; font-weight:700; color:#0b5fff; }
+.score-ring { width:56px; height:56px; border-radius:50%; background: conic-gradient(#0b5fff var(--pct, 0%), #e6e8ef 0); display:flex; align-items:center; justify-content:center; }
+.score-center { width:40px; height:40px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:#0b5fff; }
 .score-label { color:#0b5fff; font-weight:600; }
 
 .feedback-title { font-weight:700; margin: 6px 0; }
