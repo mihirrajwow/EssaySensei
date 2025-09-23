@@ -1,11 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
-export async function assessEssay(text) {
+export async function assessEssay(input) {
+  const payload = typeof input === 'string' ? { text: input } : input
   try {
     const res = await fetch(`${API_URL}/grade`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify(payload)
     })
     if (res.ok) {
       return await res.json()
@@ -13,19 +14,29 @@ export async function assessEssay(text) {
   } catch (_e) {
     // fall back to mock
   }
-  const wordCount = text.trim().split(/\s+/).length
-  const score = Math.min(100, Math.round(40 + Math.sqrt(wordCount) * 6))
+  const text = payload.text || ''
+  const stats = payload.stats || {}
+  const words = stats.words ?? (text.trim().match(/\S+/g) || []).length
+  const paragraphs = stats.paragraphs ?? (text.trim() ? text.trim().split(/\n{2,}/).length : 0)
+  const sentences = (text.split(/[.!?]+/).filter(Boolean)).length || 1
+  const avgSentence = words / sentences
+
+  let clarity = Math.max(40, Math.min(100, 100 - (avgSentence - 14) * 4))
+  let structure = Math.max(40, Math.min(100, 60 + paragraphs * 8))
+  let grammar = Math.max(40, Math.min(100, 70 - (text.match(/\b(?:teh|recieve|occured)\b/gi)?.length || 0) * 5))
+  const overall = Math.round((clarity + structure + grammar) / 3)
+
   return {
-    score,
+    score: overall,
     feedback: [
-      'Consider adding a clear thesis in the introduction.',
-      'Use more varied sentence structures.',
-      'Provide stronger evidence to support key points.'
+      'Open with a concise thesis and ensure each paragraph supports it.',
+      'Vary sentence lengths to improve readability and flow.',
+      'Proofread for minor grammatical slips and subject–verb agreement.'
     ],
     categories: {
-      Clarity: Math.max(50, score - 10),
-      Grammar: Math.max(50, score - 5),
-      Structure: Math.max(50, score - 15)
+      Clarity: Math.round(clarity),
+      Structure: Math.round(structure),
+      Grammar: Math.round(grammar)
     }
   }
 }
