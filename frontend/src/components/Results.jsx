@@ -1,0 +1,439 @@
+import React, { useState, useEffect } from 'react';
+import { Trophy, MessageCircle, RefreshCw, Calendar, BookOpen, Clock, TrendingUp, Award, Target, Lightbulb, CheckCircle, AlertCircle, Download, Share2, Star, Zap, ArrowRight } from 'lucide-react';
+import '../styles/Results.css';
+
+function Results({ result, onNewEssay }) {
+  const [animatedScore, setAnimatedScore] = useState(0);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [currentInsight, setCurrentInsight] = useState(0);
+
+  const insights = [
+    "Your writing shows clear analytical thinking",
+    "Consider varying your sentence structure more",
+    "Strong use of supporting evidence throughout",
+    "Excellent conclusion that ties ideas together"
+  ];
+
+  useEffect(() => {
+    // Animate score counting
+    const duration = 2500;
+    const steps = 80;
+    const increment = result.score / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= result.score) {
+        setAnimatedScore(result.score);
+        clearInterval(timer);
+        setTimeout(() => setShowBreakdown(true), 300);
+        setTimeout(() => setShowFeedback(true), 600);
+      } else {
+        setAnimatedScore(Math.floor(current));
+      }
+    }, duration / steps);
+
+    // Cycle through insights
+    const insightTimer = setInterval(() => {
+      setCurrentInsight((prev) => (prev + 1) % insights.length);
+    }, 3000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(insightTimer);
+    };
+  }, [result.score, insights.length]);
+
+  const getScoreColor = (score) => {
+    if (score >= 95) return 'excellent';
+    if (score >= 85) return 'good';
+    if (score >= 75) return 'average';
+    return 'needs-improvement';
+  };
+
+  const getScoreLabel = (score) => {
+    if (score >= 97) return 'Outstanding';
+    if (score >= 93) return 'Excellent';
+    if (score >= 89) return 'Very Good';
+    if (score >= 85) return 'Good';
+    if (score >= 80) return 'Above Average';
+    if (score >= 75) return 'Average';
+    if (score >= 70) return 'Below Average';
+    return 'Needs Improvement';
+  };
+
+  const getScoreEmoji = (score) => {
+    if (score >= 95) return '🏆';
+    if (score >= 90) return '🌟';
+    if (score >= 85) return '🎯';
+    if (score >= 80) return '👏';
+    if (score >= 75) return '📈';
+    if (score >= 70) return '💪';
+    return '📚';
+  };
+
+  const getGradeLevel = (score) => {
+    if (score >= 97) return 'A+';
+    if (score >= 93) return 'A';
+    if (score >= 90) return 'A-';
+    if (score >= 87) return 'B+';
+    if (score >= 83) return 'B';
+    if (score >= 80) return 'B-';
+    if (score >= 77) return 'C+';
+    if (score >= 73) return 'C';
+    if (score >= 70) return 'C-';
+    if (score >= 67) return 'D+';
+    if (score >= 65) return 'D';
+    return 'F';
+  };
+
+  const handleDownload = () => {
+    const content = `
+EssaySensei Comprehensive Analysis Report
+========================================
+
+Essay Title: ${result.title}
+Analysis Date: ${result.gradedAt}
+Overall Score: ${result.score}/100 (${getGradeLevel(result.score)})
+
+DETAILED BREAKDOWN:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Content & Ideas: ${result.breakdown.content}/25 (${Math.round((result.breakdown.content/25)*100)}%)
+• Organization: ${result.breakdown.organization}/25 (${Math.round((result.breakdown.organization/25)*100)}%)
+• Language & Style: ${result.breakdown.language}/25 (${Math.round((result.breakdown.language/25)*100)}%)
+• Grammar & Mechanics: ${result.breakdown.mechanics}/25 (${Math.round((result.breakdown.mechanics/25)*100)}%)
+
+ESSAY STATISTICS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Word Count: ${result.wordCount}
+• Estimated Reading Time: ${result.readingTime} minutes
+• Performance Category: ${getScoreLabel(result.score)}
+
+STRENGTHS IDENTIFIED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${result.feedback.strengths.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+AREAS FOR IMPROVEMENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${result.feedback.improvements.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
+
+COMPREHENSIVE SUMMARY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${result.feedback.summary}
+
+PERFORMANCE INSIGHTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• This essay ranks in the ${getScoreColor(result.score).replace('-', ' ').toUpperCase()} category
+• Grade equivalent: ${getGradeLevel(result.score)}
+• GPA equivalent: ${(result.score/100*4).toFixed(2)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by EssaySensei - Advanced AI Writing Analysis
+Visit us for more comprehensive writing feedback and improvement tools
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `EssaySensei_${result.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `My EssaySensei Results - ${result.score}/100`,
+          text: `Just got my essay "${result.title}" analyzed by EssaySensei! Score: ${result.score}/100 (${getGradeLevel(result.score)}) 🎓`,
+          url: window.location.href
+        });
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(`Just got my essay "${result.title}" analyzed by EssaySensei! Score: ${result.score}/100 (${getGradeLevel(result.score)}) 🎓`);
+      alert('Results copied to clipboard!');
+    }
+  };
+
+  return (
+    <div className="results-container">
+      <div className="results-header">
+        <div className="header-content">
+          <h2 className="results-title">Your Essay Analysis Complete!</h2>
+          <div className="header-meta">
+            <div className="grading-timestamp">
+              <Calendar size={16} />
+              <span>{result.gradedAt}</span>
+            </div>
+            <div className="essay-title-display">
+              <span>"{result.title}"</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="action-buttons">
+          <button onClick={handleDownload} className="action-btn download-btn">
+            <Download size={18} />
+            <span>Download Report</span>
+          </button>
+          <button onClick={handleShare} className="action-btn share-btn">
+            <Share2 size={18} />
+            <span>Share Achievement</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="results-content">
+        {/* Enhanced Score Section */}
+        <div className="score-section">
+          <div className={`score-card ${getScoreColor(result.score)}`}>
+            <div className="score-header">
+              <div className="score-icon-wrapper">
+                <Trophy className="score-icon" />
+                <div className="icon-glow"></div>
+              </div>
+              <h3>Overall Performance</h3>
+            </div>
+            
+            <div className="score-display">
+              <div className="score-circle">
+                <svg className="score-ring" width="240" height="240">
+                  <defs>
+                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{stopColor: 'currentColor', stopOpacity: 1}} />
+                      <stop offset="100%" style={{stopColor: 'currentColor', stopOpacity: 0.6}} />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="120"
+                    cy="120"
+                    r="100"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    opacity="0.2"
+                  />
+                  <circle
+                    cx="120"
+                    cy="120"
+                    r="100"
+                    stroke="url(#scoreGradient)"
+                    strokeWidth="8"
+                    fill="none"
+                    strokeDasharray={`${2 * Math.PI * 100}`}
+                    strokeDashoffset={`${2 * Math.PI * 100 * (1 - animatedScore / 100)}`}
+                    transform="rotate(-90 120 120)"
+                    className="score-progress"
+                  />
+                </svg>
+                <div className="score-content">
+                  <span className="score-emoji">{getScoreEmoji(result.score)}</span>
+                  <div className="score-numbers">
+                    <span className="score-number">{animatedScore}</span>
+                    <span className="score-total">/100</span>
+                  </div>
+                  <div className="grade-letter">{getGradeLevel(result.score)}</div>
+                  <div className="gpa-equivalent">{(result.score/100*4).toFixed(2)} GPA</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="score-label">
+              <span className="main-label">{getScoreLabel(result.score)}</span>
+              <span className="sub-label">Keep up the excellent work!</span>
+            </div>
+
+            <div className="score-insights">
+              <div className="insight-text">
+                <Lightbulb size={16} />
+                <span>{insights[currentInsight]}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Stats Grid */}
+        <div className="stats-grid">
+          <div className="stat-card words">
+            <BookOpen className="stat-icon" />
+            <div className="stat-content">
+              <span className="stat-number">{result.wordCount}</span>
+              <span className="stat-label">Words</span>
+            </div>
+            <div className="stat-trend">
+              {result.wordCount > 500 ? <TrendingUp size={14} /> : null}
+            </div>
+          </div>
+          
+          <div className="stat-card time">
+            <Clock className="stat-icon" />
+            <div className="stat-content">
+              <span className="stat-number">{result.readingTime}</span>
+              <span className="stat-label">Min Read</span>
+            </div>
+          </div>
+          
+          <div className="stat-card gpa">
+            <Star className="stat-icon" />
+            <div className="stat-content">
+              <span className="stat-number">{(result.score/100*4).toFixed(1)}</span>
+              <span className="stat-label">GPA Scale</span>
+            </div>
+          </div>
+          
+          <div className="stat-card strengths">
+            <Award className="stat-icon" />
+            <div className="stat-content">
+              <span className="stat-number">{result.feedback.strengths.length}</span>
+              <span className="stat-label">Strengths</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Breakdown Section */}
+        {showBreakdown && (
+          <div className="breakdown-section">
+            <h3 className="section-title">
+              <Target className="section-icon" />
+              Detailed Performance Analysis
+            </h3>
+            <div className="breakdown-grid">
+              {Object.entries(result.breakdown).map(([category, score], index) => (
+                <div key={category} className="breakdown-item">
+                  <div className="breakdown-header">
+                    <div className="category-info">
+                      <span className="category-name">
+                        {category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
+                      </span>
+                      <span className="category-description">
+                        {category === 'content' && 'Ideas, arguments, and depth'}
+                        {category === 'organization' && 'Structure and flow'}
+                        {category === 'language' && 'Vocabulary and style'}
+                        {category === 'mechanics' && 'Grammar and syntax'}
+                      </span>
+                    </div>
+                    <span className="category-score">{score}/25</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ 
+                        width: `${(score / 25) * 100}%`,
+                        animationDelay: `${index * 0.2}s`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="percentage">
+                    {Math.round((score / 25) * 100)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Feedback Section */}
+        {showFeedback && (
+          <div className="feedback-section">
+            <div className="feedback-grid">
+              <div className="feedback-card strengths">
+                <div className="feedback-header">
+                  <div className="header-icon">
+                    <CheckCircle className="feedback-icon" />
+                  </div>
+                  <div className="header-content">
+                    <h3>Strengths & Achievements</h3>
+                    <span className="count-badge">{result.feedback.strengths.length}</span>
+                  </div>
+                </div>
+                <div className="feedback-content">
+                  <ul className="feedback-list">
+                    {result.feedback.strengths.map((strength, index) => (
+                      <li key={index} className="feedback-item">
+                        <span className="bullet">✨</span>
+                        <span>{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="feedback-card improvements">
+                <div className="feedback-header">
+                  <div className="header-icon">
+                    <Lightbulb className="feedback-icon" />
+                  </div>
+                  <div className="header-content">
+                    <h3>Growth Opportunities</h3>
+                    <span className="count-badge">{result.feedback.improvements.length}</span>
+                  </div>
+                </div>
+                <div className="feedback-content">
+                  <ul className="feedback-list">
+                    {result.feedback.improvements.map((improvement, index) => (
+                      <li key={index} className="feedback-item">
+                        <span className="bullet">🚀</span>
+                        <span>{improvement}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="summary-card">
+              <div className="summary-header">
+                <MessageCircle className="summary-icon" />
+                <h3>Comprehensive Analysis Summary</h3>
+              </div>
+              <div className="summary-content">
+                <p>{result.feedback.summary}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Actions Section */}
+        <div className="actions-section">
+          <button onClick={onNewEssay} className="new-essay-button">
+            <div className="button-content">
+              <Zap size={24} />
+              <span>Analyze Another Essay</span>
+              <ArrowRight size={20} />
+            </div>
+            <div className="button-particles">
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+            </div>
+          </button>
+
+          <div className="next-steps">
+            <h4>Recommended Next Steps:</h4>
+            <div className="steps-grid">
+              <div className="step-item">
+                <BookOpen size={20} />
+                <span>Review feedback carefully</span>
+              </div>
+              <div className="step-item">
+                <Target size={20} />
+                <span>Focus on improvement areas</span>
+              </div>
+              <div className="step-item">
+                <TrendingUp size={20} />
+                <span>Track your progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Results;
